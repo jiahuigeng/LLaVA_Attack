@@ -9,7 +9,8 @@ dist
 *.log.*
 *.json
 *.jsonl
-
+*.bin
+dataset/*
 # Data
 !**/alpaca-data-conversation.json
 
@@ -21,7 +22,9 @@ dist
 .DS_Store
 wandb
 output
-
+results/*
+*.jpg
+*.png
 checkpoints
 ckpts*
 

@@ -9,16 +9,26 @@ from llava.model.builder import load_pretrained_model
 from llava.utils import disable_torch_init
 from llava.mm_utils import process_images, tokenizer_image_token, get_model_name_from_path
 
+from PIL import Image
 
+import requests
+from PIL import Image
+from io import BytesIO
 from transformers import TextStreamer
-from utils import load_image
+
 import os
 os.environ['CURL_CA_BUNDLE'] = ''
 os.environ['REQUESTS_CA_BUNDLE'] = ''
 
 torch.manual_seed(42)
 
-
+def load_image(image_file):
+    if image_file.startswith('http://') or image_file.startswith('https://'):
+        response = requests.get(image_file)
+        image = Image.open(BytesIO(response.content)).convert('RGB')
+    else:
+        image = Image.open(image_file).convert('RGB')
+    return image
 
 
 def main(args):
@@ -103,7 +113,7 @@ def main(args):
             output_ids = model.generate(
                 input_ids,
                 images=image_tensor,
-                # image_sizes=[image_size],
+                image_sizes=[image_size],
                 do_sample=True if args.temperature > 0 else False,
                 temperature=args.temperature,
                 max_new_tokens=args.max_new_tokens,
@@ -121,8 +131,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=str, default="liuhaotian/llava-v1.5-7b")
     parser.add_argument("--model-base", type=str, default=None)
-    parser.add_argument("--image-file", type=str, default=None) # "https://llava-vl.github.io/static/images/view.jpg" "facts_part_both_best_2954_prompt.png"
-    parser.add_argument("--image-bin", type=str, default="bomb_part_both_best_2912_prompt.bin") # "trans_part_both_2885_best_prompt.bin" "facts_part_both_best_2954_prompt.bin"
+    parser.add_argument("--image-file", type=str, default="facts_part_both_best_2954_prompt.png") # "https://llava-vl.github.io/static/images/view.jpg"
+    parser.add_argument("--image-bin", type=str, default=None) # "trans_part_both_2885_best_prompt.bin" "facts_part_both_best_2954_prompt.bin"
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--conv-mode", type=str, default=None)
     parser.add_argument("--temperature", type=float, default=0.2)
