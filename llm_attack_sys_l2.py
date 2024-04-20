@@ -53,7 +53,6 @@ def save_json(data, file_path):
             file.write(json_line + '\n')
 
 def prompt_attack(target_prompt, index_prompt, args, logger,  next_prompt=" "):
-
     exp_history = {}
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, args.model_name,
                                                                            load_4bit=True, device=args.device)
@@ -182,28 +181,44 @@ def main(args):
 
     full_exp_record = []
     target_prompts = get_target_data(args.task)
-    # target_prompts = [trans_prompt]
+
     args.model_name = get_model_name_from_path(args.model_path)
+
+
+    # if "prefix" in args.suffix:
+    #     num_prefix = int(args.suffix.split("_")[1])
+    #     prefix = "     " * num_prefix
+
 
     if not os.path.exists("logs"):
         os.makedirs("logs")
-    logger = get_logger(os.path.join("logs", "_".join([args.task, args.model_name])))
+    logger = get_logger(os.path.join("logs", "_".join([args.task, args.model_name, args.suffix])))
 
     if not os.path.exists("exps"):
         os.makedirs("exps")
 
-    args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name]))
+    args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name, args.suffix]))
     if not os.path.exists(args.exp_path):
         os.makedirs(args.exp_path)
 
     for index_prompt, target_prompt in enumerate(target_prompts):
+        if "prefix" in args.suffix:
+            num_prefix = int(args.suffix.split("_")[1])
+            prefix = "     " * num_prefix
+            target_prompt = prefix + target_prompt
+
+        if "suffix" in args.suffix:
+            suffix = args.suffix.split("_")[1]
+            target_prompt = target_prompt + suffix + " ,"
+
         logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
         exp_record = {}
         exp_record["prompt"] = target_prompt
         exp_record["history"] = prompt_attack(target_prompt, index_prompt, args, logger, next_prompt=" ")
-
-        # logger.info(f"prompt_{index_prompt}_{exp_record}")
         full_exp_record.append(exp_record)
+
+
+
 
     print(full_exp_record)
     if args.save_records:
@@ -214,8 +229,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     image_example = "https://llava-vl.github.io/static/images/view.jpg"
     parser.add_argument("--model-path", type=str, default="liuhaotian/llava-v1.5-7b")
-    parser.add_argument("--suffix", type=str, required=True)
     parser.add_argument("--model-base", type=str, default=None)
+    parser.add_argument("--suffix", type=str, required=True)
     parser.add_argument("--optimizer_name", type=str, default="Adam")
     parser.add_argument("--mode", type=str, default="part")
     parser.add_argument("--loss", type=str, default="both")

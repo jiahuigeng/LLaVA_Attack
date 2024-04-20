@@ -27,6 +27,7 @@ results/*
 *.png
 checkpoints
 ckpts*
+old_scripts/*
 
 .ipynb_checkpoints
 *.ipynb
