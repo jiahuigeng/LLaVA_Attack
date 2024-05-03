@@ -37,3 +37,7 @@ old_scripts/*
 
 # Demo
 serve_images/
+
+# data
+playground/data
+slurmlogs/
