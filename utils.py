@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-
+import random
 import requests
 import pandas as pd
 import numpy as np
@@ -41,6 +41,10 @@ def get_target_data(dataset, mode=None):
         csv_file = os.path.join("dataset", "safebench", "question", "SafeBench-Tiny.csv")
         images = os.path.join("dataset", "safebench", "question", "")
         data = pd.read_csv(csv_file)["question"].to_list()
+
+    elif dataset == "mm-safebench":
+        csv_file = os.path.join("dataset", "mm-safebench", "samples.csv")
+        data = pd.read_csv(csv_file)["content"].to_list()
 
     elif dataset == "trans":
         data = [trans_prompt]
@@ -171,5 +175,28 @@ def save_jsonl(data, file_path):
 def save_json(data, file_path):
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
+
+
+def create_mm_safebench():
+    total_content = []
+    total_source = []
+    df_new = pd.DataFrame()
+    files = os.listdir(os.path.join("dataset", "mm-safebench"))
+    text_files = [file for file in files if file.endswith(".txt")]
+    for file in text_files:
+        with open(os.path.join(os.path.join("dataset", "mm-safebench", file))) as infile:
+            content = infile.readlines()
+            content = [item.strip() for item in content]
+            total_content += random.sample(content, 10)
+            total_source += [file.split(".")[0] for _ in range(10)]
+
+    # print(total_source)
+    # print(total_content)
+    df_new["source"] = total_source
+    df_new["content"] = total_content
+    df_new.to_csv(os.path.join(os.path.join("dataset", "mm-safebench", "samples.csv")))
+
+create_mm_safebench()
+
 
 

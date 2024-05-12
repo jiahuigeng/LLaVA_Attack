@@ -77,6 +77,7 @@ def prompt_attack(target_prompt, index_prompt, model, tokenizer, args, logger,  
     for param in model.parameters():
         param.requires_grad = False
     for step in range(args.num_steps):  # May need more iterations for Adam
+        # print(step)
         optimizer.zero_grad()
         image_embeds = model.encode_images(image_tensor)
         loss = None
