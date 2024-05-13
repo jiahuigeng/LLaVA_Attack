@@ -30,7 +30,7 @@ def main(args):
 
     full_exp_record = {}
     target_prompts = get_target_data(args.task)
-    # target_prompts = [trans_prompt]
+
     args.model_name = get_model_name_from_path(args.model_path)
 
     if not os.path.exists("logs"):
@@ -40,9 +40,17 @@ def main(args):
     if not os.path.exists("exps"):
         os.makedirs("exps")
 
-    args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name]))
+    args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name, args.suffix]))
     if not os.path.exists(args.exp_path):
         os.makedirs(args.exp_path)
+
+    save_file = os.path.join(args.exp_path, "infer_textonly.json")
+    if os.path.exists(save_file):
+        full_exp_record = json.load(open(save_file, encoding="utf-8"))
+
+    # args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name]))
+    # if not os.path.exists(args.exp_path):
+    #     os.makedirs(args.exp_path)
 
     # image = None
     # image_tensor = None
@@ -51,33 +59,45 @@ def main(args):
 
 
     for index_prompt, target_prompt in enumerate(target_prompts):
-        logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
-        exp_record = {}
+
+
+        exp_record = dict()
         exp_record["prompt"] = target_prompt
+        exp_record["pred"] = dict()
+
+        if index_prompt in full_exp_record:
+            continue
+
+        if "suffix" in args.suffix:
+            suffix = args.suffix.split("_")[1]
+            target_prompt = target_prompt + suffix + " ,"
+
+        logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
+
         input_prompt = prepare_prompt(target_prompt, model, args.model_name, image=None)
 
         logger.info(f"full prompt: {input_prompt}")
         input_ids = tokenizer_image_token(input_prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(
             0).to(model.device)
 
+        for idx in range(args.nreps):
+            with torch.inference_mode():
+                output_ids = model.generate(
+                    input_ids,
+                    do_sample=True if args.temperature > 0 else False,
+                    temperature=args.temperature,
+                    max_new_tokens=args.max_new_tokens,
+                    use_cache=True)
 
-        with torch.inference_mode():
-            output_ids = model.generate(
-                input_ids,
-                do_sample=True if args.temperature > 0 else False,
-                temperature=args.temperature,
-                max_new_tokens=args.max_new_tokens,
-                use_cache=True)
-
-        outputs = tokenizer.decode(output_ids[0]).strip()
-        outputs = outputs.replace("<s>", "").replace("</s>", "").strip()
-        logger.info("Model Output: {}".format(outputs))
-        exp_record["pred"] = outputs
+            output = tokenizer.decode(output_ids[0]).strip()
+            output = output.replace("<s>", "").replace("</s>", "").strip()
+            logger.info(f"Model Output Idx {idx}: {output}")
+            exp_record["pred"][idx] = output
 
         full_exp_record[index_prompt] = exp_record
 
-    if args.save_records:
-        save_json(full_exp_record, os.path.join(args.exp_path, "infer_textonly.json"))
+        if args.save_records:
+            save_json(full_exp_record, os.path.join(args.exp_path, "infer_textonly.json"))
 
 
 if __name__ == "__main__":
@@ -89,6 +109,8 @@ if __name__ == "__main__":
     # parser.add_argument("--mode", type=str, default="part")
     # parser.add_argument("--loss", type=str, default="both")
     parser.add_argument("--task", type=str, default="safebench_tiny")
+    parser.add_argument("--nreps", type=int, default=7)
+    parser.add_argument("--suffix", type=str, required=True)
     parser.add_argument("--image-file", type=str, default="")
     parser.add_argument("--device", type=str, default="cuda")
     # parser.add_argument("--num-steps", type=int, default=8001)
@@ -97,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--save_records", type=str, default="True")
 
     # parser.add_argument("--conv-mode", type=str, default=None)
+
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--max-new-tokens", type=int, default=512)
     # parser.add_argument("--load-8bit", action="store_true")
