@@ -43,7 +43,7 @@ def get_target_data(dataset, mode=None):
         data = pd.read_csv(csv_file)["content"].to_list()
 
     elif "safebench" in dataset:
-        csv_file = os.path.join("dataset", "safebench", "question", dataset)
+        csv_file = os.path.join("dataset", "safebench", "question", dataset+".csv")
         data = pd.read_csv(csv_file)["question"].to_list()
 
     # elif dataset == "trans":
