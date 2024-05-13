@@ -97,7 +97,7 @@ def main(args):
         full_exp_record[index_prompt] = exp_record
 
         if args.save_records:
-            save_json(full_exp_record, os.path.join(args.exp_path, "infer_textonly.json"))
+            save_json(full_exp_record, save_file)
 
 
 if __name__ == "__main__":

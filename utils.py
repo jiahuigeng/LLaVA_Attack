@@ -33,10 +33,6 @@ def get_target_data(dataset, mode=None):
         csv_file = os.path.join("dataset", "advbench", "harmful_behaviors.csv")
         data = pd.read_csv(csv_file)["goal"].to_list()
 
-    elif dataset == "safebench":
-        csv_file = os.path.join("dataset", "safebench", "question", "safebench.csv")
-        data = pd.read_csv(csv_file)["question"].to_list()
-
     elif dataset == "safebench_tiny":
         csv_file = os.path.join("dataset", "safebench", "question", "SafeBench-Tiny.csv")
         images = os.path.join("dataset", "safebench", "question", "")
@@ -46,15 +42,19 @@ def get_target_data(dataset, mode=None):
         csv_file = os.path.join("dataset", "mm-safebench", "samples.csv")
         data = pd.read_csv(csv_file)["content"].to_list()
 
-    elif dataset == "trans":
-        data = [trans_prompt]
+    elif "safebench" in dataset:
+        csv_file = os.path.join("dataset", "safebench", "question", dataset)
+        data = pd.read_csv(csv_file)["question"].to_list()
 
-    elif dataset == "drug":
-        space_prefix = " " * 5
-        data = [drug_ques_prompt, drug_inst_prompt, drug_ques_tail_prompt, drug_lexic_split_prompt, drug_seman_split_prompt]
-        data += [igore_prompt + drug_ques_prompt, igore_prompt + drug_inst_prompt]
-        data += [space_prefix * i + drug_ques_prompt for i in range(5)]
-        return data
+    # elif dataset == "trans":
+    #     data = [trans_prompt]
+    #
+    # elif dataset == "drug":
+    #     space_prefix = " " * 5
+    #     data = [drug_ques_prompt, drug_inst_prompt, drug_ques_tail_prompt, drug_lexic_split_prompt, drug_seman_split_prompt]
+    #     data += [igore_prompt + drug_ques_prompt, igore_prompt + drug_inst_prompt]
+    #     data += [space_prefix * i + drug_ques_prompt for i in range(5)]
+    #     return data
 
     if mode == "mm":
         return data, image_list
@@ -196,7 +196,20 @@ def create_mm_safebench():
     df_new["content"] = total_content
     df_new.to_csv(os.path.join(os.path.join("dataset", "mm-safebench", "samples.csv")))
 
-create_mm_safebench()
+# create_mm_safebench()
 
+def safebench_split():
+    csv_file = os.path.join("dataset", "safebench", "question", "safebench.csv")
+    df = pd.read_csv(csv_file)
+    split_size = len(df) // 5
+    splits = [df.iloc[i:i + split_size] if i + split_size < len(df) else df.iloc[i:]
+              for i in range(0, len(df), split_size)]
+    for idx, split in enumerate(splits):
+        file_name = csv_file.split(".")[0] + str(idx+1) + ".csv"
+        split.to_csv(file_name, index=True)
+        print(file_name, "saved!")
+        # data = pd.read_csv(csv_file)["question"].to_list()
+
+safebench_split()
 
 
