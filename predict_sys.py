@@ -53,12 +53,7 @@ def main(args):
     else:
         logger.info(f"save_file {save_file} does not exist")
 
-    # args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name]))
-    # if not os.path.exists(args.exp_path):
-    #     os.makedirs(args.exp_path)
 
-    # image = None
-    # image_tensor = None
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, args.model_name,
                                                                            load_4bit=True, device=args.device)
 
@@ -70,7 +65,7 @@ def main(args):
         exp_record["prompt"] = target_prompt
         exp_record["pred"] = dict()
 
-        if index_prompt in full_exp_record:
+        if str(index_prompt) in full_exp_record:
             continue
 
         logger.info(f"current index: {index_prompt} ")
