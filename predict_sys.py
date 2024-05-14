@@ -65,7 +65,7 @@ def main(args):
         exp_record["prompt"] = target_prompt
         exp_record["pred"] = dict()
 
-        if index_prompt in full_exp_record:
+        if str(index_prompt) in full_exp_record:
             continue
 
         if "suffix" in args.suffix:
