@@ -46,7 +46,12 @@ def main(args):
 
     save_file = os.path.join(args.exp_path, "infer_textonly.json")
     if os.path.exists(save_file):
+        logger.info(f"save_file {save_file} exists")
         full_exp_record = json.load(open(save_file, encoding="utf-8"))
+        print(full_exp_record.keys())
+
+    else:
+        logger.info(f"save_file {save_file} does not exist")
 
     # args.exp_path = os.path.join("exps", "_".join([args.task, args.model_name]))
     # if not os.path.exists(args.exp_path):
@@ -65,8 +70,10 @@ def main(args):
         exp_record["prompt"] = target_prompt
         exp_record["pred"] = dict()
 
-        if str(index_prompt) in full_exp_record:
+        if index_prompt in full_exp_record:
             continue
+
+        logger.info(f"current index: {index_prompt} ")
 
         if "suffix" in args.suffix:
             suffix = args.suffix.split("_")[1]
