@@ -20,7 +20,7 @@ from llava.mm_utils import process_images, tokenizer_image_token, get_model_name
 from PIL import Image
 from torchvision import transforms
 import pickle
-from utils import get_logger, prepare_prompt, get_target_data
+from utils import get_logger, prepare_prompt, get_target_data, save_json
 
 # torch.manual_seed(50)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -46,11 +46,11 @@ tp = transforms.ToPILImage()
 #              "lsplit": lexicon_split_prompt,
 #              }
 
-def save_json(data, file_path):
-    with open(file_path, 'w') as file:
-        for item in data:
-            json_line = json.dumps(item)  # Convert dictionary to JSON string
-            file.write(json_line + '\n')
+# def save_json(data, file_path):
+#     with open(file_path, 'w') as file:
+#         for item in data:
+#             json_line = json.dumps(item)  # Convert dictionary to JSON string
+#             file.write(json_line + '\n')
 
 def prompt_attack(target_prompt, index_prompt, model, tokenizer, args, logger,  next_prompt=" "):
     exp_history = {}
@@ -116,14 +116,14 @@ def prompt_attack(target_prompt, index_prompt, model, tokenizer, args, logger,  
             loss.backward(retain_graph=True)
             optimizer.step()
 
-        if step % int(args.num_steps / 20) == 0:
+        if step % int(args.num_steps / args.num_saves) == 0:
             if loss.item() < best_loss:
                 best_loss = loss.item()
                 best_idx = step
                 best_tensor = image_tensor.detach().cpu()
                 logger.info("Step {}, Loss: {}".format(step, loss.item()))
 
-            if step % int(args.num_steps / args.num_saves) == 0:
+            # if step % int(args.num_steps / args.num_saves) == 0:
                 # inp = "what is the prompt above?"
                 # first_prompt = prepare_prompt(inp, model, args.model_name, image=True)
                 # first_ids = tokenizer_image_token(first_prompt, tokenizer, IMAGE_TOKEN_INDEX,
@@ -144,38 +144,38 @@ def prompt_attack(target_prompt, index_prompt, model, tokenizer, args, logger,  
                 # first_outputs = first_outputs.replace("<s>", "").replace("</s>", "").strip()
                 # logger.info("Step {}: Recall Output: {}".format(step, first_outputs))
                 #
-                curr_name = f"task_{index_prompt}_step_{step}_prompt.bin"
-                curr_path = os.path.join(args.exp_path, curr_name)
-                pickle.dump(image_tensor.detach().cpu(), open(curr_path, "wb"))
+            curr_name = f"task_{index_prompt}_step_{step}_prompt.bin"
+            curr_path = os.path.join(args.exp_path, curr_name)
+            pickle.dump(image_tensor.detach().cpu(), open(curr_path, "wb"))
 
-                second_prompt = prepare_prompt(next_prompt, model, args.model_name, image=True)
-                second_ids = tokenizer_image_token(second_prompt, tokenizer, IMAGE_TOKEN_INDEX,
-                                                  return_tensors='pt').unsqueeze(
-                    0).to("cuda")
+            second_prompt = prepare_prompt(next_prompt, model, args.model_name, image=True)
+            second_ids = tokenizer_image_token(second_prompt, tokenizer, IMAGE_TOKEN_INDEX,
+                                              return_tensors='pt').unsqueeze(
+                0).to("cuda")
 
-                with torch.inference_mode():
-                    output_ids = model.generate(
-                        second_ids,
-                        images=image_tensor,
-                        # image_sizes=[image_size],
-                        do_sample=True if args.temperature > 0 else False,
-                        temperature=args.temperature,
-                        max_new_tokens=args.max_new_tokens,
-                        # streamer=streamer,
-                        use_cache=True)
+            with torch.inference_mode():
+                output_ids = model.generate(
+                    second_ids,
+                    images=image_tensor,
+                    # image_sizes=[image_size],
+                    do_sample=True if args.temperature > 0 else False,
+                    temperature=args.temperature,
+                    max_new_tokens=args.max_new_tokens,
+                    # streamer=streamer,
+                    use_cache=True)
 
-                second_outputs = tokenizer.decode(output_ids[0]).strip()
-                second_outputs = second_outputs.replace("<s>", "").replace("</s>", "").strip()
-                print("Direct Output: ", second_outputs)
-                # logger.info("Step {}: Direct Output: {}".format(step, second_outputs))
+            second_outputs = tokenizer.decode(output_ids[0]).strip()
+            second_outputs = second_outputs.replace("<s>", "").replace("</s>", "").strip()
+            logger.info(f"Step {step}: Direct Output is {second_outputs}")
+            # logger.info("Step {}: Direct Output: {}".format(step, second_outputs))
 
 
-                exp_rec = {}
-                exp_rec["loss"] = loss.item()
-                # exp_rec["recall"] = first_outputs
-                exp_rec["predict"] = second_outputs
-                exp_rec["image_path"] = curr_path
-                exp_history[step] = exp_rec
+            exp_rec = {}
+            exp_rec["loss"] = loss.item()
+            # exp_rec["recall"] = first_outputs
+            exp_rec["predict"] = second_outputs
+            exp_rec["image_path"] = curr_path
+            exp_history[step] = exp_rec
 
     return exp_history
 def main(args):
@@ -196,7 +196,7 @@ def main(args):
     if not os.path.exists(args.exp_path):
         os.makedirs(args.exp_path)
 
-    save_file = os.path.join(args.exp_path, "attack.jsonl")
+    save_file = os.path.join(args.exp_path, "attack.json")
     if os.path.exists(save_file):
         full_exp_record = json.load(open(save_file, encoding="utf-8"))
 

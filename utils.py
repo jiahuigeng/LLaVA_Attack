@@ -210,6 +210,6 @@ def safebench_split():
         print(file_name, "saved!")
         # data = pd.read_csv(csv_file)["question"].to_list()
 
-safebench_split()
+# safebench_split()
 
 
