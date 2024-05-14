@@ -72,6 +72,8 @@ def main(args):
             continue
 
         logger.info(f"current index: {index_prompt} ")
+        if index_prompt > 50:
+            break
         # if "suffix" in args.suffix:
         #     suffix = args.suffix.split("_")[1]
         #     target_prompt = target_prompt + suffix + " ,"
