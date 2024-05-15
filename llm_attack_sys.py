@@ -77,7 +77,7 @@ def prompt_attack(target_prompt, index_prompt, model, tokenizer, args, logger,  
     for param in model.parameters():
         param.requires_grad = False
     for step in range(args.num_steps):  # May need more iterations for Adam
-        # print(step)
+        print(step)
         optimizer.zero_grad()
         image_embeds = model.encode_images(image_tensor)
         loss = None
@@ -216,17 +216,22 @@ def main(args):
 
         if "suffix" in args.suffix:
             suffix = args.suffix.split("_")[1]
-            target_prompt = target_prompt + suffix + " ,"
+            target_prompt = target_prompt + " " + suffix
+
+        next_prompt = " "
+        if "next" in args.suffix:
+            next_prompt = args.suffix.split("_")[1]
 
         logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
         exp_record = {}
         exp_record["prompt"] = target_prompt
-        exp_record["history"] = prompt_attack(target_prompt, index_prompt, model=model, tokenizer=tokenizer, args=args, logger=logger, next_prompt=" ")
+        exp_record["history"] = prompt_attack(target_prompt, index_prompt, model=model, tokenizer=tokenizer, args=args, logger=logger, next_prompt=next_prompt)
         full_exp_record[index_prompt] = exp_record
         # full_exp_record.append(exp_record)
 
         if args.save_records:
             save_json(full_exp_record, save_file)
+            logger.info(f"{save_file} saved!")
 
 
 if __name__ == "__main__":

@@ -8,8 +8,8 @@ import torch
 import numpy as np
 import os
 import json
-import pandas as pd
-from nltk.translate.bleu_score import sentence_bleu
+# import pandas as pd
+# from nltk.translate.bleu_score import sentence_bleu
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 from llava.conversation import conv_templates, SeparatorStyle
@@ -194,17 +194,22 @@ def main(args):
 
         if "suffix" in args.suffix:
             suffix = args.suffix.split("_")[1]
-            target_prompt = target_prompt + suffix + " ,"
+            target_prompt = target_prompt + " " + suffix
+
+        next_prompt = " "
+        if "next" in args.suffix:
+            next_prompt = args.suffix.split("_")[1]
 
         logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
         exp_record = {}
         exp_record["prompt"] = target_prompt
-        exp_record["history"] = prompt_attack(target_prompt, index_prompt, model=model, tokenizer=tokenizer, args=args, logger=logger, next_prompt=" ")
+        exp_record["history"] = prompt_attack(target_prompt, index_prompt, model=model, tokenizer=tokenizer, args=args, logger=logger, next_prompt=next_prompt)
         full_exp_record[index_prompt] = exp_record
         # full_exp_record.append(exp_record)
 
         if args.save_records:
             save_json(full_exp_record, cur_save_file)
+            logger.info(f"{cur_save_file} saved!")
 
 
 if __name__ == "__main__":
