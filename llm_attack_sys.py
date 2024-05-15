@@ -8,8 +8,8 @@ import torch
 import numpy as np
 import os
 import json
-import pandas as pd
-from nltk.translate.bleu_score import sentence_bleu
+# import pandas as pd
+# from nltk.translate.bleu_score import sentence_bleu
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
 from llava.conversation import conv_templates, SeparatorStyle
