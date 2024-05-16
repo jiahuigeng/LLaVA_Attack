@@ -42,19 +42,19 @@ def get_target_data(dataset, mode=None):
         csv_file = os.path.join("dataset", "mm-safebench", "samples.csv")
         data = pd.read_csv(csv_file)["content"].to_list()
 
+    elif dataset == "xstest":
+        csv_file = os.path.join("dataset", "xstest", "xstest_v2_prompts.csv")
+        data = pd.read_csv(csv_file)["prompt"].to_list()
+        # data = []
+        # for idx, row in pd.read_csv(csv_file).iterrows():
+        #     if str(row["type"]) == "safe_contexts":
+        #         data.append(str(row["prompt"]))
+
     elif "safebench" in dataset:
         csv_file = os.path.join("dataset", "safebench", "question", dataset+".csv")
         data = pd.read_csv(csv_file)["question"].to_list()
 
-    # elif dataset == "trans":
-    #     data = [trans_prompt]
-    #
-    # elif dataset == "drug":
-    #     space_prefix = " " * 5
-    #     data = [drug_ques_prompt, drug_inst_prompt, drug_ques_tail_prompt, drug_lexic_split_prompt, drug_seman_split_prompt]
-    #     data += [igore_prompt + drug_ques_prompt, igore_prompt + drug_inst_prompt]
-    #     data += [space_prefix * i + drug_ques_prompt for i in range(5)]
-    #     return data
+
 
     if mode == "mm":
         return data, image_list
@@ -212,4 +212,31 @@ def safebench_split():
 
 # safebench_split()
 
+def test_vlguard():
+    json_file = os.path.join("results", "test_vlguard.json")
+    content = json.load(open(json_file))
+    df_safe = pd.DataFrame()
+    df_unsafe = pd.DataFrame()
+
+    safe_ll, unsafe_ll = [], []
+    cnt = 0
+    for item in content:
+        if item['safe']:
+            for subitem in item["instr-resp"]:
+                if "safe_instruction" in subitem:
+                    safe_ll.append(subitem["safe_instruction"])
+                elif "unsafe_instruction" in subitem:
+                    unsafe_ll.append(subitem["unsafe_instruction"])
+    df_safe["question"] = safe_ll
+    df_unsafe["question"] = unsafe_ll
+    df_safe.to_csv(os.path.join("results", "vlguard_safe.csv"))
+    df_unsafe.to_csv(os.path.join("results", "vlguard_unsafe.csv"))
+
+        # print(item)
+        # cnt += 1
+
+    # print(cnt)
+
+# print(get_target_data("xstest"))
+# test_vlguard()
 
