@@ -94,6 +94,10 @@ def main(args):
             suffix = args.suffix.split("_")[1]
             target_prompt = target_prompt + suffix + " ,"
 
+        if "next" in args.suffix:
+            next_prompt = args.suffix.split("_")[1]
+            target_prompt = target_prompt + " " + next_prompt
+
         logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
 
         input_prompt = prepare_prompt(target_prompt, model, args.model_name, image=image)

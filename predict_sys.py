@@ -57,9 +57,7 @@ def main(args):
     tokenizer, model, image_processor, context_len = load_pretrained_model(args.model_path, args.model_base, args.model_name,
                                                                            load_4bit=True, device=args.device)
 
-
     for index_prompt, target_prompt in enumerate(target_prompts):
-
 
         exp_record = dict()
         exp_record["prompt"] = target_prompt
@@ -73,6 +71,11 @@ def main(args):
         if "suffix" in args.suffix:
             suffix = args.suffix.split("_")[1]
             target_prompt = target_prompt + suffix + " ,"
+
+        next_prompt = " "
+        if "next" in args.suffix:
+            next_prompt = args.suffix.split("_")[1]
+            target_prompt = target_prompt + " " + next_prompt
 
         logger.info("Prompt Index: {}, Target: {}".format(index_prompt, target_prompt))
 
