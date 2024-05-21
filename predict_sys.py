@@ -114,7 +114,7 @@ if __name__ == "__main__":
     # parser.add_argument("--mode", type=str, default="part")
     # parser.add_argument("--loss", type=str, default="both")
     parser.add_argument("--task", type=str, default="safebench_tiny")
-    parser.add_argument("--nreps", type=int, default=7)
+    parser.add_argument("--nreps", type=int, default=3)
     parser.add_argument("--suffix", type=str, required=True)
     parser.add_argument("--image-file", type=str, default="")
     parser.add_argument("--device", type=str, default="cuda")
