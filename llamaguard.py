@@ -118,8 +118,8 @@ def format_guard_messages(
 
 # print(payload)
 
-#"attack_7b.csv", "attack_7b_next.csv",
-for filename in [ "attack_13b_next.csv"]:
+#
+for filename in ["attack_7b.csv", "attack_7b_next.csv", "attack_13b_next.csv"]:
     file_path = os.path.join("results", filename)
     df_input = pd.read_csv(file_path)
     df_input["llamaguard"] = None
