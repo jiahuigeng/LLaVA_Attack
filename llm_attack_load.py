@@ -86,6 +86,8 @@ def main(args):
 
 
     for index_prompt, target_prompt in enumerate(target_prompts):
+
+        exp_history = dict()
         for sub_idx in range(0, 8001, 400):
             image_path = ref_data[str(index_prompt)]["history"][str(sub_idx)]["image_path"]
             if not os.path.exists(image_path):
@@ -94,8 +96,7 @@ def main(args):
             image_tensor = pickle.load(open(image_path, "rb")).to(model.device)
 
             exp_record = dict()
-            exp_record["prompt"] = target_prompt
-            exp_record["pred"] = dict()
+            exp_record["image_path"] = image_path
 
             if str(index_prompt) in full_exp_record:
                 continue
@@ -119,25 +120,28 @@ def main(args):
             input_ids = tokenizer_image_token(input_prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(
                 0).to(model.device)
 
-            for idx in range(args.nreps):
-                with torch.inference_mode():
-                    output_ids = model.generate(
-                        input_ids,
-                        images=image_tensor,
-                        do_sample=True if args.temperature > 0 else False,
-                        temperature=args.temperature,
-                        max_new_tokens=args.max_new_tokens,
-                        use_cache=True)
+            # for idx in range(args.nreps):
+            with torch.inference_mode():
+                output_ids = model.generate(
+                    input_ids,
+                    images=image_tensor,
+                    do_sample=True if args.temperature > 0 else False,
+                    temperature=args.temperature,
+                    max_new_tokens=args.max_new_tokens,
+                    use_cache=True)
 
-                output = tokenizer.decode(output_ids[0]).strip()
-                output = output.replace("<s>", "").replace("</s>", "").strip()
-                logger.info(f"Model Output Idx {idx}: {output}")
-                exp_record["pred"][idx] = output
+            output = tokenizer.decode(output_ids[0]).strip()
+            output = output.replace("<s>", "").replace("</s>", "").strip()
 
-            full_exp_record[index_prompt] = exp_record
+            logger.info(f"Model Output Step {sub_idx}: {output}")
+            exp_record["predict"] = output
+            exp_history[sub_idx] = exp_record
 
-            if args.save_records:
-                save_json(full_exp_record, save_file)
+        full_exp_record[index_prompt]["prompt"] = target_prompt
+        full_exp_record[index_prompt]["history"] = exp_history
+
+        if args.save_records:
+            save_json(full_exp_record, save_file)
 
 
 if __name__ == "__main__":
