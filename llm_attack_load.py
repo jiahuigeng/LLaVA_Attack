@@ -139,7 +139,7 @@ def main(args):
 
         full_exp_record[index_prompt]["prompt"] = target_prompt
         full_exp_record[index_prompt]["history"] = exp_history
-
+        print(full_exp_record[index_prompt])
         if args.save_records:
             save_json(full_exp_record, save_file)
 
